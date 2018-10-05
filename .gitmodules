@@ -1,0 +1,20 @@
+[submodule "borosReed24_optiboot/optiboot"]
+	path = borosReed24_optiboot/optiboot
+	url = https://github.com/Optiboot/optiboot.git
+	branch = master
+[submodule "borosReed24_firmware/lib/Low-Power"]
+	path = borosReed24_firmware/lib/Low-Power
+	url = https://github.com/rocketscream/Low-Power.git
+	branch = master
+[submodule "borosReed24_firmware/lib/RF24"]
+	path = borosReed24_firmware/lib/RF24
+	url = https://github.com/nRF24/RF24.git
+	branch = master
+[submodule "borosReed24_firmware/lib/RF24Network"]
+	path = borosReed24_firmware/lib/RF24Network
+	url = https://github.com/nRF24/RF24Network.git
+	branch = master
+[submodule "borosReed24_firmware/lib/RF24Mesh"]
+	path = borosReed24_firmware/lib/RF24Mesh
+	url = https://github.com/nRF24/RF24Mesh.git
+	branch = master
