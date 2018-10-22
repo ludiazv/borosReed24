@@ -144,8 +144,8 @@ int main(void) {
 #if (LED_START_FLASHES > 0) || defined(LED_DATA_FLASH) || defined(LED_START_ON)
   /* Set LED pin as output */
   LED_DDR |= _BV(LED);
-    3e4c:	25 9a       	sbi	0x04, 5	; 4
-    3e4e:	86 e0       	ldi	r24, 0x06	; 6
+    3e4c:	54 9a       	sbi	0x0a, 4	; 10
+    3e4e:	84 e0       	ldi	r24, 0x04	; 4
 }
 
 #if LED_START_FLASHES > 0
@@ -175,7 +175,7 @@ void flash_led(uint8_t count) {
     LED_PORT ^= _BV(LED);
 #else
     LED_PIN |= _BV(LED);
-    3e64:	1d 9a       	sbi	0x03, 5	; 3
+    3e64:	4c 9a       	sbi	0x09, 4	; 9
 }
 #endif
 
@@ -515,7 +515,7 @@ void putch(char ch) {
   LED_PORT ^= _BV(LED);
 #else
   LED_PIN |= _BV(LED);
-    3f80:	1d 9a       	sbi	0x03, 5	; 3
+    3f80:	4c 9a       	sbi	0x09, 4	; 9
     :
       "r25"
 );
@@ -549,7 +549,7 @@ void watchdogReset() {
   LED_PORT ^= _BV(LED);
 #else
   LED_PIN |= _BV(LED);
-    3f98:	1d 9a       	sbi	0x03, 5	; 3
+    3f98:	4c 9a       	sbi	0x09, 4	; 9
 #endif
 #endif
 
