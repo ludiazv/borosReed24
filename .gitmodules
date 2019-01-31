@@ -2,10 +2,6 @@
 	path = borosReed24_optiboot/optiboot
 	url = https://github.com/Optiboot/optiboot.git
 	branch = master
-[submodule "borosReed24_firmware/lib/Low-Power"]
-	path = borosReed24_firmware/lib/Low-Power
-	url = https://github.com/rocketscream/Low-Power.git
-	branch = master
 [submodule "borosReed24_firmware/lib/RF24"]
 	path = borosReed24_firmware/lib/RF24
 	url = https://github.com/nRF24/RF24.git
