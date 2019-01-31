@@ -1,5 +1,5 @@
 
-optiboot_borosReed24M_UART0_9600_8000000L.elf:     file format elf32-avr
+optiboot_borosReed24MB_UART0_9600_1000000L.elf:     file format elf32-avr
 
 Sections:
 Idx Name          Size      VMA       LMA       File off  Algn
@@ -121,7 +121,7 @@ void pre_main(void) {
     7e36:	86 e0       	ldi	r24, 0x06	; 6
     7e38:	80 93 c2 00 	sts	0x00C2, r24	; 0x8000c2 <__TEXT_REGION_LENGTH__+0x7e00c2>
   UART_SRL = (uint8_t)BAUD_SETTING;
-    7e3c:	87 e6       	ldi	r24, 0x67	; 103
+    7e3c:	8c e0       	ldi	r24, 0x0C	; 12
     7e3e:	80 93 c4 00 	sts	0x00C4, r24	; 0x8000c4 <__TEXT_REGION_LENGTH__+0x7e00c4>
     #endif // LIN_UART
   #endif // mega8/etc
@@ -143,8 +143,8 @@ void pre_main(void) {
 void flash_led(uint8_t count) {
   do {
     TCNT1 = -(F_CPU/(1024*16));
-    7e4a:	28 e1       	ldi	r18, 0x18	; 24
-    7e4c:	3e ef       	ldi	r19, 0xFE	; 254
+    7e4a:	23 ec       	ldi	r18, 0xC3	; 195
+    7e4c:	3f ef       	ldi	r19, 0xFF	; 255
     TIFR1 = _BV(TOV1);
     7e4e:	91 e0       	ldi	r25, 0x01	; 1
 }
@@ -460,7 +460,7 @@ static inline void writebuffer(int8_t memtype, addr16_t mybuff,
     7f54:	85 e9       	ldi	r24, 0x95	; 149
     7f56:	0a d0       	rcall	.+20     	; 0x7f6c <putch>
       putch(SIGNATURE_2);
-    7f58:	8f e0       	ldi	r24, 0x0F	; 15
+    7f58:	86 e1       	ldi	r24, 0x16	; 22
     7f5a:	9c cf       	rjmp	.-200    	; 0x7e94 <main+0x90>
     }
     else if (ch == STK_LEAVE_PROGMODE) { /* 'Q' */

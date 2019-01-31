@@ -1,5 +1,5 @@
 
-optiboot_borosReed24M_UART0_9600_8000000L.elf:     file format elf32-avr
+optiboot_borosReed24MB_UART0_9600_8000000L.elf:     file format elf32-avr
 
 Sections:
 Idx Name          Size      VMA       LMA       File off  Algn
@@ -460,7 +460,7 @@ static inline void writebuffer(int8_t memtype, addr16_t mybuff,
     7f54:	85 e9       	ldi	r24, 0x95	; 149
     7f56:	0a d0       	rcall	.+20     	; 0x7f6c <putch>
       putch(SIGNATURE_2);
-    7f58:	8f e0       	ldi	r24, 0x0F	; 15
+    7f58:	86 e1       	ldi	r24, 0x16	; 22
     7f5a:	9c cf       	rjmp	.-200    	; 0x7e94 <main+0x90>
     }
     else if (ch == STK_LEAVE_PROGMODE) { /* 'Q' */

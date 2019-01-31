@@ -17,6 +17,8 @@ cd $BUILD_DIR
 
 # Patch Makefile.custom with board defintion
 cat <<EOF >> Makefile.custom
+$(info building custom optiboot)
+
 # borosReed24 based on atmega168pa/p
 borosReed24: TARGET = atmega168p
 borosReed24: MCU_TARGET = atmega168p
@@ -27,7 +29,7 @@ borosReed24: \$(PROGRAM)_borosReed24_UART\$(UART)_\$(BAUD_RATE)_\$(AVR_FREQ).hex
 borosReed24: \$(PROGRAM)_borosReed24_UART\$(UART)_\$(BAUD_RATE)_\$(AVR_FREQ).lst
 
 
-# borosReed24 based on atmega168pa/p
+# borosReed24 based on atmega328p/pa
 borosReed24M: TARGET = atmega328p
 borosReed24M: MCU_TARGET = atmega328p
 borosReed24M: CFLAGS += \$(COMMON_OPTIONS) \$(UART_CMD)
@@ -35,6 +37,15 @@ borosReed24M: AVR_FREQ ?= 1000000L
 borosReed24M: LDSECTIONS = -Wl,--section-start=.text=0x7e00 -Wl,--section-start=.version=0x7ffe
 borosReed24M: \$(PROGRAM)_borosReed24M_UART\$(UART)_\$(BAUD_RATE)_\$(AVR_FREQ).hex
 borosReed24M: \$(PROGRAM)_borosReed24M_UART\$(UART)_\$(BAUD_RATE)_\$(AVR_FREQ).lst
+
+# borosReed24 based on atmega328pb
+borosReed24MB: TARGET = atmega328pb
+borosReed24MB: MCU_TARGET = atmega328pb
+borosReed24MB: CFLAGS += \$(COMMON_OPTIONS) \$(UART_CMD)
+borosReed24MB: AVR_FREQ ?= 1000000L 
+borosReed24MB: LDSECTIONS = -Wl,--section-start=.text=0x7e00 -Wl,--section-start=.version=0x7ffe
+borosReed24MB: \$(PROGRAM)_borosReed24MB_UART\$(UART)_\$(BAUD_RATE)_\$(AVR_FREQ).hex
+borosReed24MB: \$(PROGRAM)_borosReed24MB_UART\$(UART)_\$(BAUD_RATE)_\$(AVR_FREQ).lst
 
 \$(info FREQ Selected->\$(AVR_FREQ))
 EOF
@@ -55,6 +66,12 @@ make $what ${toolchain} ${COMMON_OPTIONS} ${LED_OPTIONS} AVR_FREQ=1000000L
 rm baudcheck.tmp.sh
 make $what ${toolchain} ${COMMON_OPTIONS} ${LED_OPTIONS} AVR_FREQ=8000000L
 rm baudcheck.tmp.sh
+what="borosReed24MB"
+make $what ${toolchain} ${COMMON_OPTIONS} ${LED_OPTIONS} AVR_FREQ=1000000L
+rm baudcheck.tmp.sh
+make $what ${toolchain} ${COMMON_OPTIONS} ${LED_OPTIONS} AVR_FREQ=8000000L
+rm baudcheck.tmp.sh
+
 cd $PWD_O
 echo $(pwd)
 echo "Copy results..."
