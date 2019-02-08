@@ -2,21 +2,21 @@
 
 LIB_PATH="lib"
 
-LIBS=( "https://github.com/rocketscream/Low-Power.git"
-        "https://github.com/nRF24/RF24.git"
+LIBS=(  "https://github.com/nRF24/RF24.git"
         "https://github.com/nRF24/RF24Network.git"
-        "https://github.com/nRF24/RF24Mesh.git" )
+        "https://github.com/nRF24/RF24Mesh.git" 
+        "https://github.com/mcci-catena/arduino-lmic")
 
-PATHS=( "$LIB_PATH/Low-Power" 
-        "$LIB_PATH/RF24" 
+PATHS=( "$LIB_PATH/RF24" 
         "$LIB_PATH/RF24Network" 
-        "$LIB_PATH/RF24Mesh" )
+        "$LIB_PATH/RF24Mesh"
+        "$LIB_PATH/arduino-lmic" )
 
 
-VERSIONS=( "v1.8" 
-           "v1.3.1" 
+VERSIONS=( "v1.3.1" 
            "2d1099581aebede5e0c40eb14cf6adaccbce3ba0" 
-           "1d77422c667c3011ce507f469736606d8da5752a" )
+           "1d77422c667c3011ce507f469736606d8da5752a"
+           "v2.3.1" )
 
 CWD=$(pwd)
 
@@ -53,7 +53,11 @@ else
         git checkout ${VERSIONS[$i]}
         git show --oneline -s
         cd $CWD
+        echo "updated!"
     done
 fi
+
+echo "Patching lmic_project_config.h"
+echo "//Removed as it configured via platformio INI\n" > $LIB_PATH/arduino-lmic/project_config/lmic_project_config.h
 
 echo "Done!"

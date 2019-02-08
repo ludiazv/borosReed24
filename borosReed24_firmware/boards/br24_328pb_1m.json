@@ -1,0 +1,22 @@
+{
+    "build": {
+      "core": "arduino",
+      "extra_flags": "-DARDUINO_AVR_BOROSREED_328PB",
+      "f_cpu": "1000000L",
+      "mcu": "atmega328pb",
+      "variant": "standard"
+    },
+    "frameworks": [
+      "arduino"
+    ],
+    "name": "BorosReed24M (Atmega328PB@1M,3V)",
+    "upload": {
+      "maximum_ram_size": 2048,
+      "maximum_size": 32256,
+      "protocol": "arduino",
+      "require_upload_port": true,
+      "speed": 9600
+    },
+    "url": "pending",
+    "vendor": "Boros Lab"
+  }

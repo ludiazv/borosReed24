@@ -14,3 +14,7 @@
 	path = borosReed24_firmware/lib/RF24Mesh
 	url = https://github.com/nRF24/RF24Mesh.git
 	branch = master
+[submodule "borosReed24_firmware/lib/arduino-lmic"]
+	path = borosReed24_firmware/lib/arduino-lmic
+	url = https://github.com/mcci-catena/arduino-lmic
+	branch = master
