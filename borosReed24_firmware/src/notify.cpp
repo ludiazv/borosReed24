@@ -14,9 +14,11 @@ static  uint8_t  _cayenne_channel;
 bool add_cayenne(uint8_t type,uint16_t data) {
 
     uint8_t size;
-    if(type==LPP_DIGITAL_INPUT || type==LPP_PRESENCE_SIZE) {
+    if(type==LPP_DIGITAL_INPUT || type==LPP_PRESENCE || type==LPP_RELATIVE_HUMIDITY) {
         size= LPP_DIGITAL_INPUT_SIZE;
-    } else if (type==LPP_ANALOG_INPUT) {
+        if(type==LPP_RELATIVE_HUMIDITY) data=data/50;  // patch mudity data to cayenne 0.5% precission
+    } else if(type==LPP_ANALOG_INPUT || type==LPP_TEMPERATURE ||
+              type==LPP_BAROMETRIC_PRESSURE) {
         size= LPP_ANALOG_INPUT_SIZE;
     } else return false;
     if((_payload_size + size)> BUFFER_SIZE) return false;
@@ -24,7 +26,7 @@ bool add_cayenne(uint8_t type,uint16_t data) {
     status.buffer[_payload_size++]=type;
     if(size==LPP_DIGITAL_INPUT_SIZE) status.buffer[_payload_size++]=(uint8_t) data;
     else {
-        int16_t v= data / 10; //(mV to cV signed)
+        int16_t v= data / 10; //(mV to cV signed o Temp cayenne LPP)
         status.buffer[_payload_size++]= v >> 8;
         status.buffer[_payload_size++]= (uint8_t) v;
     } 
@@ -61,8 +63,9 @@ void add_variable(char v,char f) {
     // R: reed status           - bool
     // V: VCC    (16bit)        - milivolts  
     // B: Batery (16bit)        - milivolts
-    // A: Battery alarm         - bool
-    // C: Cayenne LLP           - cayenne LLP 
+    // T: Temp   (16bit)        - 0.1C
+    // H: Humidity (16bit)
+    // A: Battery alarm         - bool 
     uint16_t data;
     bool _8bit=(v=='i' || v=='R' || v=='A');
     uint8_t cayenne=255;
@@ -79,14 +82,23 @@ void add_variable(char v,char f) {
         cayenne= LPP_DIGITAL_INPUT;  
     } else if(v=='V') {
         data=status.vcc;
-        cayenne= LPP_ANALOG_INPUT;   
+        cayenne= LPP_ANALOG_INPUT;
+    } else if(v=='T') {
+        data=status.temp;
+        cayenne= LPP_TEMPERATURE;
+    } else if(v=='H') {
+        data=status.hum;
+        cayenne= LPP_RELATIVE_HUMIDITY;
+    } else if(v=='P') {
+        data=status.preasure;
+        cayenne= LPP_BAROMETRIC_PRESSURE;
     } else return;
     // Formats:
     // d: decimal 
     // x: hexadecimal string
     // b: binary LSB
     // B: bool-> "true"/"false"
-    // C: Cayenne
+    // c: Cayenne
     char tmp[6];
     char format[6]={'%','0','4','X',0,0};
     if(f=='d') {
@@ -95,8 +107,8 @@ void add_variable(char v,char f) {
         if(_8bit) format[2]='2';
     } else if(f=='b') {
         format[0]='\0';
-    } else if(f=='C') {
-         format[0]='C'; // Mark cayenne format
+    } else if(f=='c') {
+         format[0]='c'; // Mark cayenne format
     } else if(f=='B') {
         if(data) {
             format[0]='t'; format[1]='r'; format[2]='u';
@@ -109,7 +121,7 @@ void add_variable(char v,char f) {
     // OUTPUT
     if(format[0]=='\0') { // Binary
         add_binary((const char*)&data,(_8bit) ? 1: 2);      
-    } else if(format[0]=='C') {
+    } else if(format[0]=='c') {
         add_cayenne(cayenne,data);
     } else {
         snprintf(tmp,6,format,data);
@@ -156,27 +168,20 @@ void prepare_payload(){
 
 void do_notification(){
     
+    // ----------------------
+    // - Notification phase 
+    // ----------------------
     led(status.led);
-    wake(false);  // Enable wake signal for batery measure 
     DBG_PRINTLN(F("Notify..."));
     DBG_FLUSH();
-    // --- Measure ADC ----
-    status.batery=MeasureVBat();
-    DBG_PRINT(F("VBat(mV):"));
-    DBG_PRINTLN(status.batery);
-    DBG_FLUSH();
-    wake(true);   // Disable batery measurement mosfet
-    status.vcc=MeasureVcc();
-    DBG_PRINT(F("Vcc(mV):"));
-    DBG_PRINTLN(status.vcc);
-    DBG_FLUSH();
-
+    // Sense the status
+    sense(DBG_EXP(true));
     // --- payload preparation
-    DBG_PRINT(F("Prepare payload..."));
+    DBG_PRINT(F("[payload"));
     DBG_FLUSH();
     prepare_payload();
-    status.buffer[_payload_size]='\0';
-    DBG_PRINT(F("size:"));
+    DBG_EXP(status.buffer[_payload_size]='\0');
+    DBG_PRINT(F("size]:"));
     DBG_PRINTLN(_payload_size);
     DBG_FLUSH();
     // --- Notification section ----
@@ -186,17 +191,27 @@ void do_notification(){
         radio_send(status.buffer,_payload_size);
         radio_disconnect();
     }
-    radio_pwr(false); // Disable radio
+    radio_pwr(false);           // Disable radio
+    if(status.led) led(false);  // Disable led after notification
+
+    // short notification periodo if the reed chaged just 
+    // after sending wait 4 seconds and send notify again
+    // --- This helps when mesh / Lora is used ----
     bool reed_after=reed(status.inverted);
     if(reed_after!=status.reed) {
+        led(status.led);    // Keep led in waiting
         status.reed=reed_after;
-        delay(4000);
+        idle(SLEEP_4S);
+        //delay(4000);
         return;
     }
-    DBG_PRINTLN(F("Go to sleep"));
+
+    // ----------------
+    // Sleep phase
+    // ----------------
+    DBG_PRINTLN(F("[sleep]"));
     DBG_FLUSH();
     _report= (status.report==0) ? 1 : status.report;
-    if(status.led) led(false);
     // sleep section
     wake_t w;
     #if defined(BOROSREED_LORA)
@@ -213,13 +228,16 @@ void do_notification(){
         _report--;
 
     } while(w==WAKE_WDT && _report>0);
+
     status.reed=reed(status.inverted);
-    DBG_PRINT(F("WAKE/reed:"));
-    DBG_PRINTLN(status.reed);
+    DBG_PRINT(F("[w/reed]:"));
+    DBG_PRINT(status.reed);
+    DBG_PRINTLN(w);
     DBG_FLUSH();
     if(w==WAKE_BUT) reboot();
+    
     #if defined(BOROSREED_LORA)
-        patch_time(8000*_timer_patch);
+        patch_time(TOTAL_8S_MS*_timer_patch);
     #endif
 
 }

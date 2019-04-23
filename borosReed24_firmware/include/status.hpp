@@ -8,13 +8,16 @@
  * @brief Support RF modes
  *  PLAIN         -> PLAIN RF24 pipes
  *  MESH          -> Mesh network based on nrf24Mesh protocol
- *  PLAIN_LORA    -> Plain Lora mode
- *  LORAWANABP    -> LoRA WAN ABP model
+ *  LORA_TTN      -> TTN LoRaWan
+ *  LORA_PLAIN    -> Plain Lora / FSK (planned)
+ *  RMF69         -> Future support   (planned support)
  */
 enum rf_mode_t {
     RF_PLAIN=0,
     RF_MESH,
     RF_LORA_TTN,
+    RF_LORA_PLAIN,
+    RF_RFM69
 };
 
 /**
@@ -56,11 +59,11 @@ enum rf_mode_t {
 
 #if defined(BOROSREED24)
     #if defined(BOROSREED24_MESH)
-        #define BR_MAX_FRAME_SIZE  90
+        #define BR_MAX_FRAME_SIZE  65
     #else
         #define BR_MAX_FRAME_SIZE  32
     #endif
-    #define MAGIK 0xABCD
+    #define MAGIK 0xABCA
     struct RadioConfig {
         /// Common for all Radio mode
         uint8_t  rf_PA_level;     ///< PA Level (RF24_PA_MIN = 0,RF24_PA_LOW, RF24_PA_HIGH, RF24_PA_MAX)
@@ -81,7 +84,7 @@ enum rf_mode_t {
         bool     msh_force_renew;  ///< Force Mesh renew address allways after sleep
     };
 #elif defined(BOROSREED_LORA)
-    #define MAGIK 0xAB22
+    #define MAGIK 0xAB21
     #define BR_MAX_FRAME_SIZE  50
     struct RadioConfig {
         uint8_t  ttn_devEUI[8];
@@ -105,6 +108,7 @@ struct RConfig {
     bool        enable_int;     ///< Enable INT1 external wake up
     uint16_t    id;             ///< Arbitrary device id (16bit uinteger)
     uint16_t    report;         ///< Report multiplier (Report every n*8sec) if n=0 disabled
+    uint8_t     accuracy;       ///< Accuracy byte for sensors.
     char        payload_template[TEMPLATE_SIZE+1]; ///< RF payload template
     rf_mode_t   rf_mode;        ///< RF mode (PLAIN, MESH, ....)
     
@@ -121,6 +125,7 @@ enum config_par_t {
     CFG_ENABLE_INT=offsetof(RConfig,enable_int),
     CFG_ID=offsetof(RConfig,id),        
     CFG_REPORT=offsetof(RConfig,report),
+    CFG_ACCURACY=offsetof(RConfig,accuracy),
     CFG_PAYLOAD_TEMPLATE=offsetof(RConfig,payload_template),
     CFG_RF_MODE=offsetof(RConfig,rf_mode),
     #if defined(BOROSREED24)
@@ -138,6 +143,7 @@ enum config_par_t {
     CFG_MSH_FRAMEID=offsetof(RConfig,rf) + offsetof(RadioConfig,msh_frameid),
     CFG_MSH_DADDR=offsetof(RConfig,rf) + offsetof(RadioConfig,msh_daddr),
     CFG_MSH_FORCE_RENEW=offsetof(RConfig,rf) + offsetof(RadioConfig,msh_force_renew)
+
     #elif defined(BOROSREED_LORA)
     CFG_TTN_DEVEUI=offsetof(RConfig,rf) + offsetof(RadioConfig,ttn_devEUI),
     CFG_TTN_APPEUI=offsetof(RConfig,rf) + offsetof(RadioConfig,ttn_appEUI),
@@ -149,11 +155,11 @@ enum config_par_t {
     #endif
 };
 
-void init_config(bool reset=false);
-void save_adc_cal(float v);
-void dump_config(Print &p);
-void get_config(config_par_t e,void *dest,uint16_t len);
-void save_config(config_par_t e,void *src,uint16_t len);
+void             init_config(bool reset=false);
+//void save_adc_cal(float v);
+void            dump_config(Print &p);
+void            get_config(config_par_t e,void *dest,uint16_t len);
+void            save_config(config_par_t e,void *src,uint16_t len);
 inline void     set_cnf(config_par_t e,uint8_t v) { save_config(e,&v,sizeof(uint8_t)); }
 inline void     set_cnfw(config_par_t e,uint16_t v) { save_config(e,&v,sizeof(uint16_t)); }
 inline uint8_t  get_cnf(config_par_t e){ uint8_t c=0; get_config(e,&c,1); return c; }
@@ -189,15 +195,15 @@ inline uint16_t get_cnfw(config_par_t e){ uint16_t c=0; get_config(e,&c,2); retu
 
 
 struct R24Status {
-    bool      inverted;
-    bool      led;
-    bool      enable_int;
-    uint16_t  id;
-    uint16_t  report;
-    rf_mode_t rf_mode;
-    char      payload_template[TEMPLATE_SIZE+1];
+    bool      inverted;         ///< Consider Reed inverted
+    bool      led;              ///< Flash led on notification
+    bool      enable_int;       ///< Enable external int
+    uint16_t  id;               ///< Internal 16bit ID
+    uint16_t  report;           ///< Report multiplier n*8sec
+    rf_mode_t rf_mode;          ///< RF Mode
+    char      payload_template[TEMPLATE_SIZE+1];    ///< Payload template
 #if defined(BOROSREED24)
-    bool      rf_ack;
+    bool      rf_ack;              ///< Use autoack (for pipes only)
     #if defined(BOROSREED24_MESH)
         uint8_t   msh_frameid;     ///< Mesh frame
         uint8_t   msh_daddr;       ///< Mesh remote addr
@@ -209,13 +215,15 @@ struct R24Status {
     uint8_t   ttn_jsf;      ///< SF used in join
     uint8_t   ttn_port;     ///< port to be used.
 #endif
-    bool      reed;
-    uint16_t  batery;
-    uint16_t  vcc;
-    //float     adc_cal; 
+    bool      reed;         ///< Status of the reed
+    uint16_t  batery;       ///< Bat voltage in mV
+    uint16_t  vcc;          ///< Vcc voltage in mV
+    int16_t   temp;         ///< Temperature in Celsius 0.1C steps
+    uint16_t  hum;          ///< Humidity in % 0.01 % steps
+    uint16_t  preasure;     ///< Preasure
+    uint8_t   accuracy;     ///< Sendor accuracy byte
 
-    uint8_t buffer[BUFFER_SIZE+1]; ///< Shared services
-
+    uint8_t buffer[BUFFER_SIZE+1]; ///< Shared buffer
 
 };
 

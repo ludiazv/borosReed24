@@ -15,38 +15,45 @@ void setup() {
     bool but=button(true);
     if(but) {
         enable_uart();
-        delay(100);
+        idle(SLEEP_120MS);
+        //delay(100);
         Serial.begin(DBG_SPEED);
     } else {
         DBG_EXP(enable_uart());
-        DBG_EXP(delay(100));
+        DBG_EXP(idle(SLEEP_120MS));
+        //delay(100);
         DBG_INIT(); // Enable debug if defined
         (void) but;
     }
     
     // load/init config
-    init_config(true);
+    init_config(false);
     // Init the radio (will be powered off)
     bool radio_ok=radio_init();
     //bool radio_ok=true;
-    
+    // Init the sensors
+    bool sensor_ok=sense_init();
+    //bool sensor_ok=true;
+
     // Check config to set the mode.
     if(but) {
-        Serial.println(F("\nBoot in configuration mode [" BOROSREED24_VERSION "]"));
+        Serial.println(F("\nConfiguration mode"));
+        Serial.print(F("SOK:")); Serial.println(sensor_ok);
         Serial.print(F("ROK:")); Serial.println(radio_ok);
         current_mode=MODE_CONFIG;
         print_banner();
         Serial.flush();
         led(true);
     } else {
-        DBG_PRINTLN(F("\nBoot in notification mode [" BOROSREED24_VERSION "]"));
+        DBG_PRINTLN(F("\nNotification mode"));
+        DBG_PRINT(F("SOK:")); DBG_PRINTLN(sensor_ok);
         DBG_PRINTLN(F("Connecting..."));
         radio_ok=radio_ok && radio_connect();
         DBG_PRINT(F("ROK:")); DBG_PRINTLN(radio_ok);
         DBG_FLUSH();
-        current_mode= (radio_ok) ? MODE_NOTIFY : MODE_ERROR;
+        current_mode= (radio_ok && sensor_ok) ? MODE_NOTIFY : MODE_ERROR;
         #if defined(BOROSREED_LORA)
-            delay(2000); // Helps with single channel gateways after OTAA
+            idle(SLEEP_4S); // Helps with single channel gateways after OTAA
         #endif
     }
     // read reed status
@@ -66,10 +73,11 @@ void loop() {
             reboot();
         }
     } else { // Error mode
+        DBG_PRINTLN(F("ERRROR"));
         led(true);
-        delay(3000);
+        deepSleep(SLEEP_2S);
         led(false);
-        delay(3000);
+        deepSleep(SLEEP_2S);
         if(button(true)) reboot();
     }
 

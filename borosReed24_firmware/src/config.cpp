@@ -2,17 +2,16 @@
 #include "version.h"
 
 
-static const char banner[] PROGMEM = "BorosReed24 config console <" BOROSREED24_VERSION ">-Type <help> to show commands";
+static const char banner[] PROGMEM = "BorosReed24 config console [" BOROSREED24_VERSION "] Type 'help' to show commands";
 static const char help[] PROGMEM = "---COMMANDS---:\n"
     "Misc:\n"
     "=====\n"
     "help - shows this msg\n"
     "ver  - shows version banner\n"
-    "show - shows currunt configuration\n"
-    "bat  - shows battery voltage\n"
+    "show - shows current configuration\n"
+    "sen  - shows sensors status\n"
     "rebo - reboot device\n" 
     "fac  - override config with factory defaults\n"
-    "reed - shows reed status\n"
     "General:\n"
     "========\n"
     "inv <1/0>   - invert reed sensor reading\n"
@@ -20,6 +19,7 @@ static const char help[] PROGMEM = "---COMMANDS---:\n"
     "eint <1/0>  - enable external interrupt\n"
     "id <number> - set 16bit integer ID\n"
     "repo <mul>  - set periodic report = 8*mul seconds.(0=disabled)\n"
+    "acc <n>     - set accuracy byte\n "
     "tpl  <template> - set payload template\n"
     "mode <0-3> - set radio mode 0=plain,1=mesh,2=lorawan\n"
 #if defined(BOROSREED24)
@@ -52,7 +52,7 @@ static const char help[] PROGMEM = "---COMMANDS---:\n"
     "por <number> - port number\n"
     "cha <number> - TTN channel number\n"
     "sf  <7-12>   - Spread Factor\n"
-    "jsf  <7-12>  - SF on join"
+    "jsf <7-12>   - SF on join"
 #endif
     "";
 
@@ -62,16 +62,16 @@ static const Boros::command_t cmds[] PROGMEM={
      "ver",
      "show",
     // COMMANDS
-     "bat",
+     "sen",
      "rebo",
      "fac",
-     "reed",
     // COMMON CONFIG
      "inv",
      "led",
      "eint",
      "id",
      "repo",
+     "acc",
      "tpl",     
      "mode",
      // Radio specific commands
@@ -112,20 +112,20 @@ enum cmd_ids_t {
     CMD_VER,
     CMD_SHOW,
     // COMMANDS
-    CMD_BAT,
+    CMD_SEN,
     CMD_REBO,
     CMD_FAC,
-    CMD_REED,
     // COMMON CONFIG
     CMD_INV,
     CMD_LED,
     CMD_EINT,
     CMD_ID,
     CMD_REPO,
+    CMD_ACC,
     CMD_TPL,     
     CMD_MODE,
 #if defined(BOROSREED24)
-    CMD_TPX,
+    CMD_TXP,
     CMD_CHA,
     CMD_RATE,
     CMD_PSZ,
@@ -141,6 +141,7 @@ enum cmd_ids_t {
     CMD_MDST,
     CMD_MFOR,
     #endif
+
 #elif defined(BOROSREED_LORA)
     CMD_DUI,
     CMD_AUI,
@@ -188,19 +189,8 @@ void do_config() {
                 Serial.println();
                 print_banner();
                 break;
-            case CMD_BAT:
-                wake(false);  // Enable batery measure
-                u16=MeasureVBat();
-                wake(true);  // Disable battery management
-                Serial.print(F("\nBat voltage(mV):"));
-                Serial.print(u16);
-                Serial.flush();
-                //Serial.print(F(" | Cal factor:"));
-                //Serial.println(status.adc_cal,4);
-                //Serial.flush();
-                u16=MeasureVcc();
-                Serial.print(F("Vcc(mV):"));
-                Serial.println(u16);
+            case CMD_SEN:
+                sense(true);
                 break;
             case CMD_REBO:
                 rebot=true;
@@ -212,10 +202,6 @@ void do_config() {
             case CMD_SHOW:
                 Serial.println();
                 dump_config(Serial);
-                break;
-            case CMD_REED:
-                Serial.print(F("\nReed value:"));
-                Serial.println(reed(status.inverted));
                 break;
             /*case CMD_CAL:
                 wake(false);  // Enable batery measure
@@ -258,10 +244,12 @@ void do_config() {
             case CMD_REPO:
                 set_cnf(CFG_REPORT,con.parse_uint16(&cmd));
                 break;
+            case CMD_ACC:
+                set_cnf(CFG_ACCURACY,u8);
+                break;
             case CMD_TPL:
-                    u16=strlen(cmd.param);
-                    if((ok=(u16>0 && u16<TEMPLATE_SIZE))) 
-                        save_config(CFG_PAYLOAD_TEMPLATE,cmd.param,u16+1);
+                u16=strlen(cmd.param);
+                if((ok=(u16>0 && u16<TEMPLATE_SIZE))) save_config(CFG_PAYLOAD_TEMPLATE,cmd.param,u16+1);
                 break;
             case CMD_MODE:
                 #if defined(BOROSREED24)
@@ -274,8 +262,10 @@ void do_config() {
                     if((ok=(u8==2))) set_cnf(CFG_RF_MODE,u8);
                 #endif
                 break;
-            #if defined(BOROSREED24)    
-            case CMD_PTX:
+                
+            #if defined(BOROSREED24)
+           
+            case CMD_TXP:
                 if((ok=(/*u8>=0 && */u8<=4))) set_cnf(CFG_RF_PA_LEVEL,u8);
                 break;
             case CMD_CHA:
@@ -288,18 +278,14 @@ void do_config() {
                 if((ok=(u8>=3 && u8<=5))) set_cnf(CFG_RF_ADDR_SIZE,u8);
                 break;
             case CMD_PIPE:
-                {
-                    uint8_t pip[5];
-                    if(con.parse_hex(&cmd,pip,5)){
-                        
-                    }
-                }
+                u8= get_cnf(CFG_RF_ADDR_SIZE);
+                if((ok=con.parse_hex(&cmd,tmp,u8))) save_config(CFG_RF_DADDR,tmp,u8);
                 break;
             case CMD_DSZ:
                 if((ok=(u8>0 && u8<=32))) set_cnf(CFG_RF_PAYLOAD_SIZE,u8);
                 break;
             case CMD_CRC:
-                set_cnf(CFG_RF_CRC,b);
+                if((ok=(u8<=2))) set_cnf(CFG_RF_CRC,u8);
                 break;
             case CMD_ACK:
                 set_cnf(CFG_RF_ACK,b);
@@ -314,26 +300,20 @@ void do_config() {
             #if defined(BOROSREED24_MESH)
 
             case CMD_MNID:
+                if((ok=(u8>0))) set_cnf(CFG_MSH_NODEID,u8);
                 break;
-
             case CMD_MFID:
+                if((ok=(u8>=1 && u8<=127))) set_cnf(CFG_MSH_FRAMEID,u8);
                 break;
-
             case CMD_MDST:
-                
+                if((ok=(u8!=get_cnf(CFG_MSH_NODEID)))) set_cnf(CFG_MSH_DADDR,u8);
                 break;
             case CMD_MFOR:
+                set_cnf(CFG_MSH_FORCE_RENEW,b);
                 break;
 
             #endif
 
-            /*
-                CMD_PIPE,
-
-                CMD_MNID,
-                CMD_MFID,
-                CMD_MDST,
-                CMD_MFOR */
             #elif defined(BOROSREED_LORA)
             case CMD_DUI:
             case CMD_AUI:
@@ -343,16 +323,22 @@ void do_config() {
                 }
                 break;
             case CMD_APK:
+                if((ok=con.parse_hex(&cmd,tmp,16))){
+                    save_config(CFG_TTN_APPKEY,tmp,16);
+                }
+                break;
+            case CMD_CHA:
+                set_cnf(CFG_TTN_CHANNEL,u8);
+                ok=true;
                 break;
             case CMD_POR:               
                 if((ok=(u8>0))) set_cnf(CFG_TTN_PORT,u8);
                 break;
             case CMD_SF:
             case CMD_JSF:
-                if((ok=(u8>=7 && u8<=12))) {
-                    if(cmd.cmd==CMD_SF) set_cnf(CFG_TTN_SF,u8);
-                    else set_cnf(CFG_TTN_JSF,u8);
-                }
+                if(u8<7 || u8>12) u8=255;
+                if(cmd.cmd==CMD_SF) set_cnf(CFG_TTN_SF,u8); else set_cnf(CFG_TTN_JSF,u8);
+                ok=true;
                 break;
             #endif
             default:
@@ -362,7 +348,7 @@ void do_config() {
 
     } else ok=false;
    
-    if(ok) Serial.println(F("[OK]")); else Serial.println(F("[ERROR]"));
+    if(ok) Serial.println(F("\n[OK]\n")); else Serial.println(F("\n[ERROR]\n"));
     if(rebot) {
         Serial.println(F("Reboot!"));
         Serial.flush();
