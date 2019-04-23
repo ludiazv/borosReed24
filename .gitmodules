@@ -18,3 +18,7 @@
 	path = borosReed24_firmware/lib/arduino-lmic
 	url = https://github.com/mcci-catena/arduino-lmic
 	branch = master
+[submodule "borosReed24_firmware/lib/arduino-SHTC3"]
+	path = borosReed24_firmware/lib/arduino-SHTC3
+	url = https://github.com/ludiazv/arduino-SHTC3.git
+	branch = master
