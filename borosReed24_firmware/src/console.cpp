@@ -18,27 +18,36 @@ uint32_t Console::parse_uint32(const ConsoleCmd *cmd) {
 
 uint8_t Console::hex(char ca) {
     char c=toupper(ca);
+    //Serial.print("C:");  Serial.println(c,HEX);
+    //Serial.print("CA:"); Serial.println(ca,HEX);
     if(c>='0' && c<='9'){
         return c - '0';
     } else if(c>='A' && c<='F') {
-        return c - 'A';
+        return 0x0A + (c - 'A');
     } else return 0xFF;
 }
 
 bool Console::parse_hex(const ConsoleCmd *cmd,uint8_t *dst,uint8_t size) {
     if(cmd->param==NULL) return false;
     int l=strlen(cmd->param);
-    Serial.print("L:");Serial.print(l);
-    Serial.print(" S:");Serial.println(size);
-    if(l==0 || (l % 2) > 0 || size <= (l*2)) return false;
+    //Serial.print("L:");Serial.print(l);
+    //Serial.print(" S:");Serial.println(size);
+    //Serial.print("{"); Serial.print(cmd->param);
+    //Serial.print("}");
+    if(l==0 || (l % 2) > 0 || l != (size*2)) return false;
     for(uint8_t i=0;i<l;i+=2) {
         char ch,ch2;
         ch=this->hex(cmd->param[i]);
         ch2=this->hex(cmd->param[i+1]);
+        //Serial.print("CH1:"); Serial.println(ch,HEX);
+        //Serial.print("CH2:"); Serial.println(ch2,HEX);
         if(ch!=0xFF && ch2!=0xFF) {
             *dst=(ch << 4) | ch2;
+            //Serial.print(*dst,HEX);
             dst++;
-        } return false;
+        } else {
+            return false;
+        }
     }
     return true;
 }
