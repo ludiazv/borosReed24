@@ -43,15 +43,15 @@ static uint32_t _join_started;
 
 /* LMIC Callabcks */
 #ifndef DISABLE_JOIN
-static const u1_t PROGMEM APPEUI[8]= { 0x68, 0x4A, 0x01, 0xD0, 0x7E, 0xD5, 0xB3, 0x70 };
-void os_getArtEui (u1_t* buf) { memcpy_P(buf, APPEUI, 8); }
-//void os_getArtEui (u1_t* buf) { get_config(CFG_TTN_APPEUI,buf,8); }
-static const u1_t PROGMEM DEVEUI[8]={ 0x65, 0x2F, 0x3E, 0x68, 0xD6, 0xE6, 0xA4, 0x00 };
-void os_getDevEui (u1_t* buf) { memcpy_P(buf, DEVEUI, 8); }
-//void os_getDevEui (u1_t* buf) { get_config(CFG_TTN_DEVEUI,buf,8); }
-static const u1_t PROGMEM APPKEY[16] = { 0xE4, 0xF2, 0xE9, 0x00, 0x4C, 0x08, 0x1A, 0x1F, 0xE8, 0xFF, 0x42, 0x9D, 0x1D, 0x68, 0x4C, 0xF5 };
-void os_getDevKey (u1_t* buf) {  memcpy_P(buf, APPKEY, 16); }
-//void os_getDevKey (u1_t* buf) {  get_config(CFG_TTN_APPKEY,buf,16); }
+//static const u1_t PROGMEM APPEUI[8]= { 0x68, 0x4A, 0x01, 0xD0, 0x7E, 0xD5, 0xB3, 0x70 };
+//void os_getArtEui (u1_t* buf) { memcpy_P(buf, APPEUI, 8); }
+void os_getArtEui (u1_t* buf) { get_config(CFG_TTN_APPEUI,buf,8); }
+//static const u1_t PROGMEM DEVEUI[8]={ 0x65, 0x2F, 0x3E, 0x68, 0xD6, 0xE6, 0xA4, 0x00 };
+//void os_getDevEui (u1_t* buf) { memcpy_P(buf, DEVEUI, 8); }
+void os_getDevEui (u1_t* buf) { get_config(CFG_TTN_DEVEUI,buf,8); }
+//static const u1_t PROGMEM APPKEY[16] = { 0xE4, 0xF2, 0xE9, 0x00, 0x4C, 0x08, 0x1A, 0x1F, 0xE8, 0xFF, 0x42, 0x9D, 0x1D, 0x68, 0x4C, 0xF5 };
+//void os_getDevKey (u1_t* buf) {  memcpy_P(buf, APPKEY, 16); }
+void os_getDevKey (u1_t* buf) {  get_config(CFG_TTN_APPKEY,buf,16); }
 #endif
 
 static const uint8_t DR_CODES[6] PROGMEM = { DR_SF7, DR_SF8, DR_SF9 , DR_SF10, DR_SF11, DR_SF12};
@@ -92,7 +92,7 @@ void onEvent (ev_t ev) {
     _join_status=JOIN_JOINING;
   } else if(ev==EV_JOINED) {
     DBG_PRINTLN(F(":JO-"));
-    setupChannelDR(0,7);
+    setupChannelDR(status.ttn_channel,status.ttn_sf);
     _join_status=JOIN_DONE;
   } else if(ev==EV_JOIN_FAILED) {
     DBG_PRINTLN(F(":JF"));
@@ -106,6 +106,9 @@ void onEvent (ev_t ev) {
 
 }
 
+void radioL_loop(uint32_t ms){
+
+}
 
 bool radioL_init(){
 
