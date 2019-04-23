@@ -14,6 +14,25 @@
 #define _H_MINIPOWER_H_
 
 
+#if defined(USE_32KHZ)
+typedef enum period_te
+{
+	SLEEP_15MS=2,   // 32Khz ->
+	SLEEP_30MS=2,	
+	SLEEP_60MS=2,
+	SLEEP_120MS=3,
+	SLEEP_250MS=3,
+	SLEEP_500MS=4,
+	SLEEP_1S=5,
+	SLEEP_2S=6,
+	SLEEP_4S=7,
+	SLEEP_8S=7,
+	SLEEP_FOREVER=9
+} period_t;
+
+#define TOTAL_8S_MS	8000U    // Precise 8S 
+
+#else
 typedef enum period_te
 {
 	SLEEP_15MS,
@@ -28,6 +47,9 @@ typedef enum period_te
 	SLEEP_8S,
 	SLEEP_FOREVER
 } period_t;
+
+#define TOTAL_8S_MS	9533U    // 110Khz with 1204K prescaler of the  
+#endif
 
 // Prototypes
 void idle(period_t period);

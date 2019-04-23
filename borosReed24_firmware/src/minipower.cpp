@@ -51,35 +51,73 @@ do { 						\
 } while (0);
 
 // ------ IRQ --------
+volatile static bool _wdt_no_ovf;
 ISR (WDT_vect)
 {
 	// WDIE & WDIF is cleared in hardware upon entering this ISR
 	wdt_disable();
+  _wdt_no_ovf=false;
 }
 
 // ----- Functions ------
-/*void idle(period_t p) {
+void idle(period_t p) {
+  wdt_disable();
   if (p != SLEEP_FOREVER)
 	{
-		wdt_enable(p);
-		WDTCSR |= (1 << WDIE);	
-	}
-  lowPowerBodOn(SLEEP_MODE_IDLE);
+		_wdt_no_ovf=true;
+    wdt_enable(p);
+		WDTCSR |= (1 << WDIE);
+    do { 
+      lowPowerBodOn(SLEEP_MODE_IDLE);	
+    } while(_wdt_no_ovf);
+  }
+}
 
-}*/
-
+#if defined(USE_32KHz)
+void initTimer2(period_t p) {
+  power_timer2_enable();
+  TCCR2B =p ; // Normal mode . arduino set it  to mode 1
+  TCCR2A =0 ; // Normal mode . arduino set it  to mode 1
+  ASSR  = (1<<AS2);  //Enable asynchronous mode
+  TCNT2=0; //set initial counter value
+  while (ASSR & ((1<<TCN2UB)|(1<<TCR2BUB))); // wait for registers update
+  TIFR2    =  (1<<TOV2); //clear interrupt flags
+  TIMSK2  |=  (1<<TOIE2); //enable TOV2 interrupt
+}
+void stopTimer2(period_t p) {
+  TCCR2B   = 0; // Stop clocking the timer
+  TIFR2    = (1 << TOV2); //clear interrupt flags
+  TIMSK2  &= ~(1 << TOIE2); //disable TOV2 interrupt
+  power_timer2_disable();
+}
+#endif
 
 void _sleep(period_t p,uint8_t mode) {
+
+#if defined(USE_32KHZ)
+  if(p != SLEEP_FOREVER) startTimer2(p);
+#else
+  wdt_disable(); // Make sure is disabled the W
   if (p != SLEEP_FOREVER)
 	{
 		wdt_enable(p);
 		WDTCSR |= (1 << WDIE);	
 	}
-    lowPowerBodOff(mode);
+#endif
+
+  lowPowerBodOff(mode);
+
+#if defined(USE_32KHZ)
+  if(p != SLEEP_FOREVER) stopTimer2();
+#endif
+
+
 }
+
 void powerDown(period_t period) {
 	_sleep(period,SLEEP_MODE_PWR_DOWN);
 }
+
 void  adcNoiseReduction(period_t period) {
 	_sleep(period,SLEEP_MODE_ADC);
 }
