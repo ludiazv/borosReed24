@@ -6,9 +6,12 @@
 #include "radio.hpp"
 #include "dbg.h"
 
+#if defined(BOROSREED24_I2C)
+#include<Wire.h>
+#endif
+
 #define VBAT_ADC        6
 #define VCC_ADC         0xE
-//#define VBAT_ADC        2
 #define TEMP_ADC        8
  
 #define VBAT_ALARM      2000
@@ -17,15 +20,18 @@
 #define ADC_VCC_REF      ( ( 1 << REFS0 ) )
 
 // VBAT computation
+// R1= up resitor , R2= down resistor
+// ADC_STEP= Internal ref / resolution * 1000  mV
+// Divider constant K= ( step * (R1+R2) ) / R2
+// Measure value (mv)= (ADC * K) + 0.5 
 #define ADC_STEP        ((1.1f/1024.0f)*1000.0f)
 #define ADC_R1          (100.0f)
 #define ADC_R2          (51.0f)
 #define ADC_R           (ADC_R1+ADC_R2)
-#define ADC_K           ((ADC_STEP*ADC_R)/ADC_R2)
-#define ADC_CAL_K       (ADC_STEP/3344.0f)            
+#define ADC_K           ((ADC_STEP*ADC_R)/ADC_R2)         
 #define ADC_CAL_REF     (2500.0f)
 
-// BAND GAP VCC computation
+// BANDGAP VCC computation
 // 1.1V * 1023 -> 1100*1023 = 1125300
 #define ADC_VCC_K       1125300   
 #define ADC_SAMPLES     4

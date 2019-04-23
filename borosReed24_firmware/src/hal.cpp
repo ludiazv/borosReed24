@@ -8,7 +8,6 @@
 
 #define BUT_DEBOUNCE   25    ///< Debounce button
 
-
 void init_hw() {
     // Configure the IOs
     // -----------------
@@ -29,6 +28,9 @@ void init_hw() {
     PORTE= 0b0000;
  #endif
 
+    // WDT - disable
+    wdt_disable();
+
     // POWER Reduction
     // ----------------
     ADCSRA=0;
@@ -48,6 +50,8 @@ void init_hw() {
         power_spi0_enable();
         #if defined(BOROSREED24_I2C)
             power_twi0_enable();
+            Wire.begin();
+            TWBR0= 0;  // Max speed for twi which will be quite low 
         #else
             power_twi0_disable();
         #endif
@@ -55,6 +59,8 @@ void init_hw() {
         power_spi_enable();     // Enable SPI as radio is SPI device
         #if defined(BOROSREED24_I2C)
             power_twi_enable();
+            Wire.begin();
+            TWBR= 0; //// Max speed for twi which will be quite low 
         #else
             power_twi_disable();
         #endif
@@ -85,8 +91,7 @@ void init_hw() {
     EIFR  =  ( 1 << INTF1 ) | ( 1 << INTF0 ); // Clear interrupts
     //---------------------
 
-    // WDT - disable
-    wdt_disable();
+    
 }
 
 void enable_uart() {
