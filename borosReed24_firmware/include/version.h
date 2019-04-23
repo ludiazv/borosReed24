@@ -1,14 +1,18 @@
 
 #ifndef BOROSREED24_VERSION
-#define _HC_VERSION_BR_ "V0.0.1"
+#define _HC_VERSION_BR_ "3"
+
+#ifndef _BOROSREED_PRODUCT
+#define _BOROSREED_PRODUCT  "BR"
+#endif
 
 #if defined(BOROSREED_LORA)
-#define BOROSREED24_VERSION _HC_VERSION_BR_ "[LORA]"
+#define BOROSREED24_VERSION  _BOROSREED_PRODUCT "<TTN>V" _HC_VERSION_BR_ 
 #elif defined(BOROSREED24) 
-    #if defined(BOROREED24_MESH)
-        #define BOROSREED24_VERSION _HC_VERSION_BR_ "[24M]"
+    #if defined(BOROSREED24_MESH)
+        #define BOROSREED24_VERSION _BOROSREED_PRODUCT "<24M>V" _HC_VERSION_BR_ 
     #else
-        #define BOROSREED24_VERSION _HC_VERSION_BR_ "[24]"   
+        #define BOROSREED24_VERSION _BOROSREED_PRODUCT "<24>V"  _HC_VERSION_BR_ 
     #endif
 #endif
 
