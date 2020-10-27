@@ -14,7 +14,8 @@ static const RConfig factory_conf PROGMEM = {
     "%Id,%Rd,%Bd,%AB,%Vd",     ///< payload template
     RF_PLAIN,                  ///< RF mode (PLAIN / MESH)
     {
-    2,                         ///< PA Level (RF24_PA_MIN = 0,RF24_PA_LOW, RF24_PA_HIGH, RF24_PA_MAX, 4= ULTRA)
+    2,                         ///< PA Level (RF24_PA_MIN = 0,RF24_PA_LOW, RF24_PA_HIGH, RF24_PA_MAX)
+    0,                         ///< Enable LNA 
     76,                        ///< RF Channel to use (1-127)
     0,                         ///< RF Speed to use (1Mbps,2Mbps,250K)
     5,                         ///< Address size in plain mode 3-5 
@@ -150,6 +151,7 @@ void dump_config(Print &p){
     #endif
     
     p.print(F("[txp]Tx power:")); p.println(get_cnf(CFG_RF_PA_LEVEL));
+    p.print(F("[lna]Enable Lna:")); p.println(get_cnf(CFG_RF_ENABLE_LNA));
     p.print(F("[rate]Data rate:")); p.println(get_cnf(CFG_RF_SPEED));
     p.print(F("[cha]Channel:")); p.println(get_cnf(CFG_RF_CHANNEL));
     

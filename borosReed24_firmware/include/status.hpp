@@ -67,6 +67,7 @@ enum rf_mode_t {
     struct RadioConfig {
         /// Common for all Radio mode
         uint8_t  rf_PA_level;     ///< PA Level (RF24_PA_MIN = 0,RF24_PA_LOW, RF24_PA_HIGH, RF24_PA_MAX)
+        uint8_t  rf_enable_lna;   ///< Enable Lna
         uint8_t  rf_channel;      ///< RF Channel to use (1-127)
         uint8_t  rf_speed;        ///< RF Speed to use (1Mbps,2Mbps,250K)
         /// Plain parameters
@@ -130,6 +131,7 @@ enum config_par_t {
     CFG_RF_MODE=offsetof(RConfig,rf_mode),
     #if defined(BOROSREED24)
     CFG_RF_PA_LEVEL=offsetof(RConfig,rf) + offsetof(RadioConfig,rf_PA_level),
+    CFG_RF_ENABLE_LNA=offsetof(RConfig,rf) + offsetof(RadioConfig,rf_enable_lna),
     CFG_RF_CHANNEL=offsetof(RConfig,rf) + offsetof(RadioConfig,rf_channel),
     CFG_RF_SPEED=offsetof(RConfig,rf) + offsetof(RadioConfig,rf_speed),
     CFG_RF_ADDR_SIZE=offsetof(RConfig,rf) + offsetof(RadioConfig,rf_addr_size),

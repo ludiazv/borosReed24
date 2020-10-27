@@ -48,7 +48,7 @@ bool radio24_init() {
             radio.setPayloadSize(32); // Reset Payload size
             uint8_t tmp=get_cnf(CFG_RF_CRC);
             if(tmp) radio.setCRCLength((rf24_crclength_e)tmp); else radio.disableCRC(); // CRC
-            radio.setPALevel(get_cnf(CFG_RF_PA_LEVEL)); // Cofigure PA
+            radio.setPALevel(get_cnf(CFG_RF_PA_LEVEL),get_cnf(CFG_RF_ENABLE_LNA)); // Cofigure PA
             radio.setChannel(get_cnf(CFG_RF_CHANNEL)); // Configure Channel
             tmp=get_cnf(CFG_RF_PAYLOAD_SIZE);
             if(tmp==0) radio.enableDynamicPayloads();   // Activate DynamicPayloads 
@@ -77,7 +77,7 @@ bool radio24_init() {
         ret= mesh.begin(get_cnf(CFG_RF_CHANNEL),(rf24_datarate_e)get_cnf(CFG_RF_SPEED),MESH_TIMEOUT);
         if(ret) {
             mesh.setChild(false);
-            radio.setPALevel(get_cnf(CFG_RF_PA_LEVEL)); // Cofigure PA
+            radio.setPALevel(get_cnf(CFG_RF_PA_LEVEL),get_cnf(CFG_RF_ENABLE_LNA)); // Cofigure PA
         }
     }
     #endif

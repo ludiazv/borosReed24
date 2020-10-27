@@ -19,14 +19,15 @@ static const char help[] PROGMEM = "---COMMANDS---:\n"
     "eint <1/0>  - enable external interrupt\n"
     "id <number> - set 16bit integer ID\n"
     "repo <mul>  - set periodic report = 8*mul seconds.(0=disabled)\n"
-    "acc <n>     - set accuracy byte\n "
-    "tpl  <template> - set payload template\n"
+    "acc <n>     - set accuracy byte\n"
+    "tpl <template> - set payload template\n"
     "mode <0-3> - set radio mode 0=plain,1=mesh,2=lorawan\n"
 #if defined(BOROSREED24)
     "Radio:\n"
     "======\n"    
-    "txp  <0-4>   - set TX power level\n"
-    "cha  <1-126> - set radio channel\n"
+    "txp <0-3>   - set TX power level\n"
+    "lna 0/1     - enable lna\n"
+    "cha <1-126> - set radio channel\n"
     "rate <0/1/2> - set radio data rate 0=1MBPS,1=2MBPS,3=250KBPS\n"    
     "Plain mode:\n"
     "===========\n"
@@ -77,6 +78,7 @@ static const Boros::command_t cmds[] PROGMEM={
      // Radio specific commands
 #if defined(BOROSREED24)
      "txp",
+     "lna",
      "cha",
      "rate",
      "psz",
@@ -126,6 +128,7 @@ enum cmd_ids_t {
     CMD_MODE,
 #if defined(BOROSREED24)
     CMD_TXP,
+    CMD_LNA,
     CMD_CHA,
     CMD_RATE,
     CMD_PSZ,
@@ -266,7 +269,10 @@ void do_config() {
             #if defined(BOROSREED24)
            
             case CMD_TXP:
-                if((ok=(/*u8>=0 && */u8<=4))) set_cnf(CFG_RF_PA_LEVEL,u8);
+                if((ok=(/*u8>=0 && */u8<=3))) set_cnf(CFG_RF_PA_LEVEL,u8);
+                break;
+            case CMD_LNA:
+                set_cnf(CFG_RF_ENABLE_LNA,b);
                 break;
             case CMD_CHA:
                 if((ok=(u8>0 && u8<127))) set_cnf(CFG_RF_CHANNEL,u8);
