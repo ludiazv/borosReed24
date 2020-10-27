@@ -107,7 +107,7 @@ void onEvent (ev_t ev) {
 }
 
 void radioL_loop(uint32_t ms){
-
+    os_runloop_once();
 }
 
 bool radioL_init(){
@@ -116,7 +116,7 @@ bool radioL_init(){
     os_init();
     // Reset Radio
     LMIC_reset();
-    LMIC_setClockError(MAX_CLOCK_ERROR * 30 / 100);  // BIG INITIAL CLOCK ERROR to deal with OTAA
+    LMIC_setClockError(MAX_CLOCK_ERROR * 20 / 100);  // BIG INITIAL CLOCK ERROR to deal with OTAA
 
     //Set up Lmic ABP session.
     /*devaddr_t dev_addr=0x2601100F;
