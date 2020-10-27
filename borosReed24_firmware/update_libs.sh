@@ -15,11 +15,11 @@ PATHS=( "$LIB_PATH/RF24"
         "$LIB_PATH/arduino-SHTC3" )
 
 
-VERSIONS=( "v1.3.1" 
-           "2d1099581aebede5e0c40eb14cf6adaccbce3ba0" 
-           "1d77422c667c3011ce507f469736606d8da5752a"
-           "v2.3.1" 
-           "v0.0.2")
+VERSIONS=( "v1.3.9" 
+           "v1.0.13" 
+           "v1.1.3"
+           "v3.2.0" 
+           "v0.0.3")
 
 CWD=$(pwd)
 
@@ -49,7 +49,7 @@ if [ "$option" == "i" ] ; then
 
 else
     echo "Update Libraries...."
-    git submodule update
+    git submodule update --remote
     for i in "${!LIBS[@]}" ; do
         printf "Lib:${LIBS[$i]} Version:${VERSIONS[$i]} in ${PATHS[$i]} ..."
         cd ${PATHS[$i]}
@@ -60,7 +60,8 @@ else
     done
 fi
 
-echo "Patching lmic_project_config.h"
-echo "//Removed as it configured via platformio INI\n" > $LIB_PATH/arduino-lmic/project_config/lmic_project_config.h
+# Patching is not necessay using new define 
+#echo "Patching lmic_project_config.h"
+#echo "//Removed as it configured via platformio INI\n" > $LIB_PATH/arduino-lmic/project_config/lmic_project_config.h
 
 echo "Done!"
