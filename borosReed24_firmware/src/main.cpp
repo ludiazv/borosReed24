@@ -73,7 +73,7 @@ void loop() {
             reboot();
         }
     } else { // Error mode
-        DBG_PRINTLN(F("ERRROR"));
+        DBG_PRINTLN(F("ERROR"));
         led(true);
         deepSleep(SLEEP_2S);
         led(false);
